@@ -1,9 +1,14 @@
 from flask import Flask, render_template, request, jsonify, session
+from models import db 
 import json
 import os
 from datetime import timedelta
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///verbos.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+
 app.secret_key = os.urandom(24)
 app.permanent_session_lifetime = timedelta(days=7)
 
