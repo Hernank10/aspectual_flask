@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Ejercicios - Contraste Aspectual{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Ejercicios de Contraste Aspectual</h1>
+    
+    <div class="row" id="exercises-container">
+        {% for exercise in exercises %}
+        <div class="col-md-6 mb-4">
+            <div class="card exercise-card" data-exercise-id="{{ exercise.id }}">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Ejercicio {{ loop.index }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ exercise.question }}</p>
+                    
+                    {% if exercise.type == 'multiple_choice' %}
+                        {% for option in exercise.options %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" 
+                                   name="exercise_{{ exercise.id }}" 
+                                   id="opt_{{ exercise.id }}_{{ loop.index0 }}"
+                                   value="{{ loop.index0 }}">
+                            <label class="form-check-label" for="opt_{{ exercise.id }}_{{ loop.index0 }}">
+                                {{ option }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    {% elif exercise.type == 'completion' %}
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" 
+                                   id="answer_{{ exercise.id }}"
+                                   placeholder="Escribe tu respuesta">
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button class="btn btn-primary check-btn" 
+                                data-exercise-id="{{ exercise.id }}"
+                                data-type="{{ exercise.type }}">
+                            Verificar
+                        </button>
+                        <div class="feedback" id="feedback_{{ exercise.id }}"></div>
+                    </div>
+                    
+                    <div class="explanation mt-3" id="explanation_{{ exercise.id }}" style="display: none;">
+                        <div class="alert alert-info mb-0"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.check-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const exerciseId = this.dataset.exerciseId;
+        const exerciseType = this.dataset.type;
+        let answer;
+        
+        if (exerciseType === 'multiple_choice') {
+            const selected = document.querySelector(`input[name="exercise_${exerciseId}"]:checked`);
+            answer = selected ? selected.value : null;
+        } else {
+            answer = document.getElementById(`answer_${exerciseId}`).value;
+        }
+        
+        if (answer === null || answer === '') {
+            alert('Por favor, selecciona una respuesta');
+            return;
+        }
+        
+        fetch('/api/check-exercise', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exercise_id: parseInt(exerciseId),
+                answer: answer,
+                exercise_type: exerciseType
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const feedback = document.getElementById(`feedback_${exerciseId}`);
+            const explanation = document.getElementById(`explanation_${exerciseId}`);
+            const explanationText = explanation.querySelector('.alert');
+            
+            if (data.correct) {
+                feedback.innerHTML = '✓ Correcto!';
+                feedback.className = 'feedback text-success fw-bold';
+            } else {
+                feedback.innerHTML = '✗ Incorrecto';
+                feedback.className = 'feedback text-danger fw-bold';
+            }
+            
+            explanationText.textContent = data.explanation;
+            explanation.style.display = 'block';
+        });
+    });
+});
+</script>
+{% endblock %}

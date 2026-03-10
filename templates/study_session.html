@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Sesión de Estudio - Flashcards{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-book me-2"></i>Sesión de Estudio
+                        <span class="badge bg-light text-primary float-end" id="card-counter">
+                            1 / {{ cards|length }}
+                        </span>
+                    </h4>
+                </div>
+                
+                <div class="card-body" id="flashcard-container">
+                    <!-- Progress bar -->
+                    <div class="progress mb-4" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: 0%" id="progress-bar"></div>
+                    </div>
+                    
+                    <!-- Current flashcard -->
+                    {% if cards %}
+                    <div id="current-card" data-card-id="{{ cards[0].id }}" data-card-index="0">
+                        <div class="text-center mb-4">
+                            <span class="badge bg-info">Caja {{ cards[0].box }}</span>
+                        </div>
+                        
+                        <!-- Card front -->
+                        <div id="card-front" class="text-center">
+                            <h2 class="display-4 mb-4">{{ cards[0].verb.infinitivo }}</h2>
+                            <button class="btn btn-primary btn-lg" onclick="flipCard()">
+                                <i class="bi bi-arrow-repeat me-2"></i>Mostrar respuesta
+                            </button>
+                        </div>
+                        
+                        <!-- Card back (hidden initially) -->
+                        <div id="card-back" style="display: none;">
+                            <div class="text-center mb-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Gerundio:</strong> {{ cards[0].verb.gerundio }}</p>
+                                        <p><strong>Participio:</strong> {{ cards[0].verb.participio }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Presente (yo):</strong> {{ cards[0].verb.presente_indicativo_1s }}</p>
+                                        <p><strong>Presente (tú):</strong> {{ cards[0].verb.presente_indicativo_2s }}</p>
+                                        <p><strong>Presente (él):</strong> {{ cards[0].verb.presente_indicativo_3s }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <i class="bi bi-quote me-2"></i>{{ cards[0].verb.ejemplo_uso }}
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-center gap-3">
+                                <button class="btn btn-danger btn-lg" onclick="rateCard(false)">
+                                    <i class="bi bi-x-circle me-2"></i>Incorrecto
+                                </button>
+                                <button class="btn btn-success btn-lg" onclick="rateCard(true)">
+                                    <i class="bi bi-check-circle me-2"></i>Correcto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-emoji-smile display-1 text-success"></i>
+                        <h3 class="mt-3">¡No hay más tarjetas!</h3>
+                        <p class="text-muted">Has completado todas las tarjetas programadas para hoy.</p>
+                        <a href="{{ url_for('flashcards') }}" class="btn btn-primary mt-3">
+                            Volver a Flashcards
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Study tips -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Consejos de estudio</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Si recuerdas bien la respuesta, pulsa <strong>Correcto</strong> - la tarjeta subirá de caja</li>
+                        <li>Si no recuerdas o te equivocas, pulsa <strong>Incorrecto</strong> - la tarjeta volverá a la caja 1</li>
+                        <li>Las tarjetas en cajas superiores se revisan con menos frecuencia</li>
+                        <li>Intenta responder antes de mirar la respuesta completa</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentIndex = 0;
+let cards = {{ cards|tojson }};
+let sessionId = {{ session_id }};
+let totalCards = cards.length;
+
+function flipCard() {
+    document.getElementById('card-front').style.display = 'none';
+    document.getElementById('card-back').style.display = 'block';
+}
+
+function rateCard(correct) {
+    const currentCard = document.getElementById('current-card');
+    const cardId = currentCard.dataset.cardId;
+    
+    // Enviar resultado al servidor
+    fetch('/api/flashcard/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            flashcard_id: parseInt(cardId),
+            correct: correct,
+            session_id: sessionId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Mostrar siguiente tarjeta
+        currentIndex++;
+        
+        if (currentIndex < totalCards) {
+            updateProgress();
+            loadNextCard();
+        } else {
+            // Fin de la sesión
+            showCompletion();
+        }
+    });
+}
+
+function loadNextCard() {
+    const nextCard = cards[currentIndex];
+    
+    document.getElementById('card-front').style.display = 'block';
+    document.getElementById('card-back').style.display = 'none';
+    
+    document.getElementById('current-card').dataset.cardId = nextCard.id;
+    document.getElementById('current-card').dataset.cardIndex = currentIndex;
+    document.getElementById('card-counter').textContent = (currentIndex + 1) + ' / ' + totalCards;
+    
+    // Actualizar contenido de la tarjeta
+    document.querySelector('#card-front h2').textContent = nextCard.verb.infinitivo;
+    
+    // Actualizar contenido del dorso
+    document.querySelector('#card-back .row .col-md-6:first-child p:first-child').innerHTML = 
+        '<strong>Gerundio:</strong> ' + nextCard.verb.gerundio;
+    document.querySelector('#card-back .row .col-md-6:first-child p:last-child').innerHTML = 
+        '<strong>Participio:</strong> ' + nextCard.verb.participio;
+    document.querySelector('#card-back .row .col-md-6:last-child p:first-child').innerHTML = 
+        '<strong>Presente (yo):</strong> ' + nextCard.verb.presente_indicativo_1s;
+    document.querySelector('#card-back .row .col-md-6:last-child p:nth-child(2)').innerHTML = 
+        '<strong>Presente (tú):</strong> ' + nextCard.verb.presente_indicativo_2s;
+    document.querySelector('#card-back .row .col-md-6:last-child p:last-child').innerHTML = 
+        '<strong>Presente (él):</strong> ' + nextCard.verb.presente_indicativo_3s;
+    
+    document.querySelector('#card-back .alert').innerHTML = 
+        '<i class="bi bi-quote me-2"></i>' + nextCard.verb.ejemplo_uso;
+}
+
+function updateProgress() {
+    const progress = (currentIndex / totalCards) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+}
+
+function showCompletion() {
+    document.getElementById('flashcard-container').innerHTML = `
+        <div class="text-center py-5">
+            <i class="bi bi-trophy display-1 text-warning"></i>
+            <h3 class="mt-3">¡Sesión completada!</h3>
+            <p class="text-muted">Has estudiado ${totalCards} tarjetas.</p>
+            <div class="mt-4">
+                <a href="/flashcards" class="btn btn-primary">Volver a Flashcards</a>
+                <a href="/flashcards/study" class="btn btn-success">Nueva sesión</a>
+            </div>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

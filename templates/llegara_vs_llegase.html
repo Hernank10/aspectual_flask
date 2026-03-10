@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Llegara vs Llegase - Ejercicios{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Ejercicios: Llegara vs Llegase</h1>
+    
+    <ul class="nav nav-tabs mb-4" id="exerciseTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="multiple-tab" data-bs-toggle="tab" 
+                    data-bs-target="#multiple" type="button" role="tab">
+                Selección Múltiple
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="completion-tab" data-bs-toggle="tab" 
+                    data-bs-target="#completion" type="button" role="tab">
+                Completar Oraciones
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="context-tab" data-bs-toggle="tab" 
+                    data-bs-target="#context" type="button" role="tab">
+                Contexto Histórico
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="exerciseTabsContent">
+        <!-- Selección Múltiple -->
+        <div class="tab-pane fade show active" id="multiple" role="tabpanel">
+            {% for exercise in exercises if exercise.type == 'multiple_choice' %}
+            <div class="card mb-4" data-exercise-id="{{ exercise.id }}">
+                <div class="card-body">
+                    <p class="card-text">{{ exercise.question }}</p>
+                    {% for option in exercise.options %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" 
+                               name="mc_{{ exercise.id }}" 
+                               id="mc_{{ exercise.id }}_{{ loop.index0 }}"
+                               value="{{ loop.index0 }}">
+                        <label class="form-check-label" for="mc_{{ exercise.id }}_{{ loop.index0 }}">
+                            {{ option }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                    
+                    <button class="btn btn-primary mt-3 check-mc" data-exercise-id="{{ exercise.id }}">
+                        Verificar
+                    </button>
+                    <div class="feedback-mc mt-2" id="mc_feedback_{{ exercise.id }}"></div>
+                    <div class="explanation-mc mt-2" id="mc_explanation_{{ exercise.id }}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Completar Oraciones -->
+        <div class="tab-pane fade" id="completion" role="tabpanel">
+            {% for exercise in exercises if exercise.type == 'completion' %}
+            <div class="card mb-4" data-exercise-id="{{ exercise.id }}">
+                <div class="card-body">
+                    <p class="card-text">{{ exercise.question }}</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" 
+                               id="comp_{{ exercise.id }}"
+                               placeholder="Escribe tu respuesta">
+                    </div>
+                    
+                    <button class="btn btn-primary check-comp" data-exercise-id="{{ exercise.id }}">
+                        Verificar
+                    </button>
+                    <div class="feedback-comp mt-2" id="comp_feedback_{{ exercise.id }}"></div>
+                    <div class="explanation-comp mt-2" id="comp_explanation_{{ exercise.id }}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Contexto Histórico -->
+        <div class="tab-pane fade" id="context" role="tabpanel">
+            {% for exercise in exercises if exercise.type == 'context' %}
+            <div class="card mb-4" data-exercise-id="{{ exercise.id }}">
+                <div class="card-body">
+                    <p class="card-text">{{ exercise.sentence }}</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" 
+                               id="ctx_{{ exercise.id }}"
+                               placeholder="Completa con la forma correcta">
+                    </div>
+                    
+                    <button class="btn btn-primary check-ctx" data-exercise-id="{{ exercise.id }}">
+                        Verificar
+                    </button>
+                    <div class="feedback-ctx mt-2" id="ctx_feedback_{{ exercise.id }}"></div>
+                    <div class="explanation-ctx mt-2" id="ctx_explanation_{{ exercise.id }}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Manejadores para cada tipo de ejercicio
+document.querySelectorAll('.check-mc').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const exerciseId = this.dataset.exerciseId;
+        const selected = document.querySelector(`input[name="mc_${exerciseId}"]:checked`);
+        const answer = selected ? selected.value : null;
+        
+        checkExercise(exerciseId, answer, 'multiple_choice');
+    });
+});
+
+document.querySelectorAll('.check-comp').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const exerciseId = this.dataset.exerciseId;
+        const answer = document.getElementById(`comp_${exerciseId}`).value;
+        checkExercise(exerciseId, answer, 'completion');
+    });
+});
+
+document.querySelectorAll('.check-ctx').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const exerciseId = this.dataset.exerciseId;
+        const answer = document.getElementById(`ctx_${exerciseId}`).value;
+        checkExercise(exerciseId, answer, 'context');
+    });
+});
+
+function checkExercise(exerciseId, answer, type) {
+    if (!answer) {
+        alert('Por favor, proporciona una respuesta');
+        return;
+    }
+    
+    fetch('/api/check-exercise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            exercise_id: parseInt(exerciseId),
+            answer: answer,
+            exercise_type: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const feedbackId = `#${type === 'multiple_choice' ? 'mc' : (type === 'completion' ? 'comp' : 'ctx')}_feedback_${exerciseId}`;
+        const explanationId = `#${type === 'multiple_choice' ? 'mc' : (type === 'completion' ? 'comp' : 'ctx')}_explanation_${exerciseId}`;
+        
+        const feedback = document.querySelector(feedbackId);
+        const explanation = document.querySelector(explanationId);
+        
+        if (data.correct) {
+            feedback.innerHTML = '✓ Correcto!';
+            feedback.className = 'feedback text-success fw-bold';
+        } else {
+            feedback.innerHTML = '✗ Incorrecto';
+            feedback.className = 'feedback text-danger fw-bold';
+        }
+        
+        explanation.innerHTML = `<div class="alert alert-info mt-2">${data.explanation}</div>`;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{
+  "aspectual": [
+    {
+      "id": 1,
+      "type": "multiple_choice",
+      "question": "La escuché ______ en el escenario.",
+      "options": ["cantar", "cantando", "cantado"],
+      "correct": 0,
+      "explanation": "'Cantar' es infinitivo, presenta el evento como totalidad (valor perfectivo)."
+    },
+    {
+      "id": 2,
+      "type": "multiple_choice",
+      "question": "Los vi ______ por el parque.",
+      "options": ["correr", "corriendo", "corrido"],
+      "correct": 1,
+      "explanation": "'Corriendo' es gerundio, presenta el evento en desarrollo (valor imperfectivo)."
+    },
+    {
+      "id": 3,
+      "type": "completion",
+      "question": "Encontré la puerta ______ (abrir).",
+      "correct": "abierta",
+      "explanation": "'Abierta' es participio, presenta el evento como culminado (valor perfectivo/perfecto)."
+    }
+  ],
+  "llegara": [
+    {
+      "id": 4,
+      "type": "multiple_choice",
+      "question": "En el siglo XV: 'Cuando el rey ______ a la ciudad, todos celebraron.'",
+      "options": ["llegara", "llegase", "llegaría"],
+      "correct": 0,
+      "explanation": "'Llegara' es la forma histórica correcta, con valor de pluscuamperfecto indicativo."
+    },
+    {
+      "id": 5,
+      "type": "completion",
+      "question": "Si ______ a verlo, dile la verdad (hipótesis).",
+      "correct": "llegaras",
+      "alternatives": ["llegases"],
+      "explanation": "Ambas formas son posibles en contexto de hipótesis: 'llegaras' o 'llegases'."
+    },
+    {
+      "id": 6,
+      "type": "completion",
+      "question": "Nadie imaginó que ______ a ganar (hecho pasado).",
+      "correct": "llegara",
+      "explanation": "'Llegara' mantiene su valor indicativo residual en este contexto."
+    }
+  ],
+  "creacion": [
+    {
+      "id": 7,
+      "type": "creation",
+      "prompt": "Escribe una oración usando 'llegara' en contexto histórico-narrativo",
+      "example": "Cuando el mensajero llegara, se inició la ceremonia"
+    },
+    {
+      "id": 8,
+      "type": "creation",
+      "prompt": "Crea una frase con 'llegase' en estilo formal literario",
+      "example": "El embajador solicitó que llegase puntualmente a la audiencia"
+    }
+  ],
+  "contexto": [
+    {
+      "id": 9,
+      "type": "context",
+      "sentence": "El profesor exigió que el alumno ______ antes del examen",
+      "solution": "llegara/llegase",
+      "explanation": "Ambas formas son posibles en contexto de exigencia"
+    },
+    {
+      "id": 10,
+      "type": "context",
+      "sentence": "En el medievo, cuando el mensajero ______, se encendían hogueras",
+      "solution": "llegara",
+      "explanation": "Contexto histórico requiere 'llegara' con valor indicativo"
+    }
+  ]
+}

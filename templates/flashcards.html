@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Flashcards - Sistema Leitner{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Sistema de Flashcards Leitner</h1>
+    
+    <div class="row">
+        <!-- Panel de estadísticas -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Estadísticas</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statsChart" width="400" height="300"></canvas>
+                    
+                    <hr>
+                    
+                    <div class="mt-3">
+                        <p><strong>Total tarjetas:</strong> {{ stats.total }}</p>
+                        <p><strong>Dominadas (Caja 4-5):</strong> {{ stats.mastered }}</p>
+                        <p><strong>Precisión:</strong> {{ stats.accuracy }}%</p>
+                    </div>
+                    
+                    <div class="progress mt-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ stats.accuracy }}%">
+                            {{ stats.accuracy }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tarjetas pendientes -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-card-list me-2"></i>Tarjetas para estudiar hoy</h5>
+                </div>
+                <div class="card-body">
+                    {% if due_cards %}
+                        <p>Tienes <strong>{{ due_cards|length }}</strong> tarjetas para repasar hoy.</p>
+                        
+                        <div class="list-group mb-3">
+                            {% for card in due_cards[:5] %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ card.verb.infinitivo }}</strong>
+                                    <span class="badge bg-info ms-2">Caja {{ card.box }}</span>
+                                </div>
+                                <small>Última revisión: {{ card.last_reviewed.strftime('%d/%m/%Y') if card.last_reviewed else 'Nunca' }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <a href="{{ url_for('study_flashcards') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-play-circle me-2"></i>Comenzar sesión de estudio
+                        </a>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-emoji-smile display-1 text-success"></i>
+                            <p class="mt-3">¡No hay tarjetas para estudiar hoy!</p>
+                            <a href="{{ url_for('add_flashcard') }}" class="btn btn-primary">
+                                Añadir nuevas flashcards
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Distribución por cajas -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-grid-3x3-gap me-2"></i>Distribución por cajas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for box in range(1, 6) %}
+                        <div class="col text-center">
+                            <div class="border rounded p-3">
+                                <h3>Caja {{ box }}</h3>
+                                <h2 class="text-primary">{{ stats.by_box[box] or 0 }}</h2>
+                                <small>tarjetas</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('statsChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Caja 1', 'Caja 2', 'Caja 3', 'Caja 4', 'Caja 5'],
+            datasets: [{
+                data: [
+                    {{ stats.by_box[1] or 0 }},
+                    {{ stats.by_box[2] or 0 }},
+                    {{ stats.by_box[3] or 0 }},
+                    {{ stats.by_box[4] or 0 }},
+                    {{ stats.by_box[5] or 0 }}
+                ],
+                backgroundColor: [
+                    '#dc3545',
+                    '#fd7e14',
+                    '#ffc107',
+                    '#20c997',
+                    '#28a745'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

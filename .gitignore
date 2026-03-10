@@ -1,0 +1,45 @@
+# Entorno virtual
+venv/
+env/
+ENV/
+myenv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Base de datos
+*.db
+*.sqlite
+instance/
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos de configuración local
+.env
+.flaskenv
+
+# Archivos de log
+*.log
+logs/
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Archivos temporales
+*.tmp
+*.bak
+*.pid

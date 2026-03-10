@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Teoría - Contraste Aspectual{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Teoría Lingüística</h1>
+    
+    <div class="row">
+        <!-- Contraste Aspectual -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0"><i class="bi bi-journal-text me-2"></i>Contraste Aspectual</h3>
+                </div>
+                <div class="card-body">
+                    <h4>Infinitivo, Gerundio y Participio</h4>
+                    <p>En español, los verbos de percepción (ver, oír, sentir) pueden combinarse con tres formas no finitas:</p>
+                    
+                    <div class="mb-4">
+                        <h5>Infinitivo</h5>
+                        <p>Presenta el evento como una totalidad delimitada (valor perfectivo).</p>
+                        <div class="alert alert-light border">
+                            <strong>Ejemplo:</strong> "Lo vi <span class="badge bg-primary">atracar</span>"
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Gerundio</h5>
+                        <p>Presenta el evento en su desarrollo (valor imperfectivo).</p>
+                        <div class="alert alert-light border">
+                            <strong>Ejemplo:</strong> "Lo vi <span class="badge bg-primary">atracando</span>"
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Participio</h5>
+                        <p>Presenta el evento como culminado (valor perfectivo/perfecto).</p>
+                        <div class="alert alert-light border">
+                            <strong>Ejemplo:</strong> "Lo vi <span class="badge bg-primary">atracado</span>"
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-info bg-opacity-10 rounded">
+                        <h6><i class="bi bi-info-circle me-2"></i>Valores Aspectuales</h6>
+                        <ul>
+                            <li><strong>Infinitivo:</strong> Perfectivo (evento delimitado)</li>
+                            <li><strong>Gerundio:</strong> Imperfectivo (proceso en desarrollo)</li>
+                            <li><strong>Participio:</strong> Perfectivo/Perfecto (resultado)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Llegara vs Llegase -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h3 class="h5 mb-0"><i class="bi bi-journal-text me-2"></i>Llegara vs Llegase</h3>
+                </div>
+                <div class="card-body">
+                    <h4>Orígenes y Evolución</h4>
+                    
+                    <div class="mb-4">
+                        <h5>Orígenes Latinos</h5>
+                        <ul>
+                            <li><strong>Llegara:</strong> Del pluscuamperfecto indicativo latino (amāveram)</li>
+                            <li><strong>Llegase:</strong> Del pluscuamperfecto subjuntivo latino (amāvissem)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Usos Actuales</h5>
+                        <p><strong>Ambos casos:</strong></p>
+                        <ul>
+                            <li>Hipótesis irreal: "Si llegara/llegase tarde..."</li>
+                            <li>Cortesía atenuativa: "Quisiera que llegara/llegase..."</li>
+                        </ul>
+                        
+                        <p><strong>Solo 'llegara':</strong></p>
+                        <ul>
+                            <li>Valor indicativo residual: "Nadie pensó que llegara (≈ habría llegado)"</li>
+                            <li>Alternancia con condicional: "Creí que llegaría/llegara"</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Variación Dialectal</h5>
+                        <ul>
+                            <li><strong>América:</strong> Predominio de 'llegara'</li>
+                            <li><strong>España:</strong> Mayor uso de 'llegase' en registros formales</li>
+                            <li><strong>Registros juveniles:</strong> Tendencia a uniformizar con 'llegara'</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-warning bg-opacity-10 rounded">
+                        <h6><i class="bi bi-exclamation-triangle me-2"></i>Importante</h6>
+                        <p class="mb-0">La equivalencia no es total: 'llegara' mantiene empleos explicables por su viejo valor indicativo, donde puede alternar con 'llegaría' pero no con 'llegase'.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

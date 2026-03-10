@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Práctica de 100 Verbos{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Práctica de 100 Verbos Castellanos</h1>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Exercise interface -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-question-circle me-2"></i>
+                        <span id="exercise-counter">Ejercicio 1 / 100</span>
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Exercise question -->
+                    <div class="text-center mb-4">
+                        <h3 id="question"></h3>
+                        <p class="text-muted" id="example"></p>
+                    </div>
+                    
+                    <!-- Timer -->
+                    <div class="text-center mb-3">
+                        <span class="badge bg-info" id="timer">0s</span>
+                    </div>
+                    
+                    <!-- Options (for multiple choice) -->
+                    <div id="options-container" class="mb-4">
+                        <!-- Options will be inserted here -->
+                    </div>
+                    
+                    <!-- Input (for text entry) -->
+                    <div id="input-container" style="display: none;" class="mb-4">
+                        <input type="text" class="form-control form-control-lg" 
+                               id="answer-input" placeholder="Escribe tu respuesta">
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-secondary" onclick="skipExercise()">
+                            <i class="bi bi-skip-forward me-2"></i>Saltar
+                        </button>
+                        <button class="btn btn-primary" onclick="checkAnswer()">
+                            <i class="bi bi-check-circle me-2"></i>Verificar
+                        </button>
+                    </div>
+                    
+                    <!-- Feedback -->
+                    <div id="feedback" class="mt-4" style="display: none;">
+                        <div class="alert" role="alert"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress -->
+            <div class="card">
+                <div class="card-body">
+                    <h5>Progreso general</h5>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: 0%" id="global-progress">0%</div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col">
+                            <h3 id="correct-count">0</h3>
+                            <small>Correctas</small>
+                        </div>
+                        <div class="col">
+                            <h3 id="incorrect-count">0</h3>
+                            <small>Incorrectas</small>
+                        </div>
+                        <div class="col">
+                            <h3 id="skipped-count">0</h3>
+                            <small>Saltadas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentExercise = null;
+let startTime = null;
+let timerInterval = null;
+let stats = {
+    correct: 0,
+    incorrect: 0,
+    skipped: 0,
+    total: 0
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadNewExercise();
+});
+
+function loadNewExercise() {
+    fetch('/api/verbos/ejercicio')
+        .then(response => response.json())
+        .then(data => {
+            currentExercise = data;
+            startTime = Date.now();
+            
+            // Update UI
+            document.getElementById('question').textContent = data.question;
+            document.getElementById('example').textContent = data.example || '';
+            
+            // Update counter
+            stats.total++;
+            document.getElementById('exercise-counter').textContent = 
+                `Ejercicio ${stats.total} / 100`;
+            
+            // Show options or input
+            if (data.options && data.options.length > 0) {
+                showOptions(data.options);
+            } else {
+                showInput();
+            }
+            
+            // Start timer
+            startTimer();
+        });
+}
+
+function showOptions(options) {
+    document.getElementById('options-container').style.display = 'block';
+    document.getElementById('input-container').style.display = 'none';
+    
+    let html = '';
+    options.forEach((option, index) => {
+        html += `
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" 
+                       name="exercise-option" id="opt${index}" value="${option}">
+                <label class="form-check-label" for="opt${index}">
+                    ${option}
+                </label>
+            </div>
+        `;
+    });
+    
+    document.getElementById('options-container').innerHTML = html;
+}
+
+function showInput() {
+    document.getElementById('options-container').style.display = 'none';
+    document.getElementById('input-container').style.display = 'block';
+    document.getElementById('answer-input').value = '';
+}
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    
+    timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('timer').textContent = elapsed + 's';
+    }, 1000);
+}
+
+function checkAnswer() {
+    let answer;
+    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+    
+    // Get answer based on input type
+    if (currentExercise.options && currentExercise.options.length > 0) {
+        const selected = document.querySelector('input[name="exercise-option"]:checked');
+        if (!selected) {
+            alert('Por favor, selecciona una respuesta');
+            return;
+        }
+        answer = selected.value;
+    } else {
+        answer = document.getElementById('answer-input').value;
+    }
+    
+    // Send to server
+    fetch('/api/verbos/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            verb_id: currentExercise.verb_id,
+            answer: answer,
+            type: currentExercise.type,
+            time_spent: timeSpent
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearInterval(timerInterval);
+        
+        // Update stats
+        if (data.correct) {
+            stats.correct++;
+        } else {
+            stats.incorrect++;
+        }
+        
+        updateStats();
+        showFeedback(data);
+    });
+}
+
+function skipExercise() {
+    clearInterval(timerInterval);
+    stats.skipped++;
+    updateStats();
+    loadNewExercise();
+}
+
+function showFeedback(data) {
+    const feedback = document.getElementById('feedback');
+    const alert = feedback.querySelector('.alert');
+    
+    if (data.correct) {
+        alert.className = 'alert alert-success';
+        alert.innerHTML = `
+            <strong>✓ Correcto!</strong> ${data.explanation}
+        `;
+    } else {
+        alert.className = 'alert alert-danger';
+        alert.innerHTML = `
+            <strong>✗ Incorrecto.</strong> ${data.explanation}
+            <br>La respuesta correcta es: <strong>${data.correct_answer}</strong>
+        `;
+    }
+    
+    feedback.style.display = 'block';
+    
+    // Load next exercise after delay
+    setTimeout(() => {
+        feedback.style.display = 'none';
+        loadNewExercise();
+    }, 3000);
+}
+
+function updateStats() {
+    document.getElementById('correct-count').textContent = stats.correct;
+    document.getElementById('incorrect-count').textContent = stats.incorrect;
+    document.getElementById('skipped-count').textContent = stats.skipped;
+    
+    const progress = (stats.total / 100) * 100;
+    document.getElementById('global-progress').style.width = progress + '%';
+    document.getElementById('global-progress').textContent = Math.round(progress) + '%';
+}
+</script>
+{% endblock %}
